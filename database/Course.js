@@ -2,7 +2,6 @@ const mongoose = require("mongoose")
 const Schema = mongoose.Schema
 const validateFullName = require("../utils/ValidateFullName.js")
 const parser = require("../utils/CsvParser.js")
-const { Student } = require("./Student.js")
 const { ModuleSchema } = require("./Module.js")
 
 const CourseSchema = new Schema({
@@ -21,7 +20,7 @@ const CourseSchema = new Schema({
     modules: [ModuleSchema]
 })
 
-const CreateCourse = (csvRow) => {
+const CreateCourse = async (csvRow) => {
     return {
         courseName: csvRow[3],
         progress: Math.floor(csvRow[11]),
@@ -40,6 +39,7 @@ const CreateCourse = (csvRow) => {
 }
 
 const AddCourses = async () => {
+    const { Student } = require("./Student.js")
     let arrays = await parser("usage.csv")
     console.log("adding courses")
     for (let i = 1; i < arrays.length; i++) {
@@ -49,7 +49,8 @@ const AddCourses = async () => {
 
         await Student.findOne({ fullName: csvRow[0] })
             .then(async student => {
-                let course = CreateCourse(csvRow)
+                if (student === null) return;
+                let course = await CreateCourse(csvRow)
                 let specialization = student.specializations.find(spec => spec.university === course.university);
                 if (!specialization) {
                     let noSpec = student.specializations.find(spec => spec.specializationName === "Курсы без специализации");
@@ -57,27 +58,31 @@ const AddCourses = async () => {
                         let completed = course.isCompleted ? 1 : 0
                         let courseCount = 1
                         let specializationWithoutCourses = {
-                            student: student._id,
                             specializationName: "Курсы без специализации",
                             courseCount: 1,
                             completedCoursesCount: completed,
                             isCompleted: completed === courseCount,
                             university: '',
-                            courses: [course._id]
+                            courses: [course]
                         }
                         student.specializations.push(specializationWithoutCourses)
                         await student.save()
                     }
                     else {
                         let spec = student.specializations.find(spec => spec.specializationName === "Курсы без специализации");
-                        spec.push(course)
-                        await student.save()
+                        if (!spec.courses.find(crs => crs.courseName === course.courseName)) {
+                            spec.courses.push(course)
+                            await student.save()
+                        }
                     }
                 }
-                else {
+                else {  
                     let spec = student.specializations.find(spec => spec.university === course.university)
-                    spec.push(course)
-                    await student.save()
+                    if (!spec.courses.find(crs => crs.courseName === course.courseName)) {
+                        spec.courses.push(course)
+                        await student.save()
+                    }
+                    
                 }
 
             })

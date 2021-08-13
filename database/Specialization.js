@@ -2,7 +2,6 @@ const mongoose = require("mongoose")
 const Schema = mongoose.Schema
 const validateFullName = require("../utils/ValidateFullName.js")
 const parser = require("../utils/CsvParser.js")
-const { Student } = require("./Student.js")
 const { CourseSchema } = require("./Course.js")
 
 const SpecializationSchema = new Schema({
@@ -15,6 +14,7 @@ const SpecializationSchema = new Schema({
 }) 
 
 const AddSpecializations = async () => {
+    const { Student } = require("./Student.js")
     let arrays = await parser("specialization.csv")
     console.log("adding specializations");
     for (let i = 1; i < arrays.length; i++) {
@@ -25,6 +25,7 @@ const AddSpecializations = async () => {
         if (!validateFullName(row[0])) continue;
         await Student.findOne({ fullName: filter.fullName })
             .then(async student => {
+                if (student === null) return;
                 if (student.specializations.find(spec => spec.specializationName === row[3])) return;
                 student.specializations.push({
                     specializationName: row[3],

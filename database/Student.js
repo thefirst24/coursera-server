@@ -57,7 +57,7 @@ const AddStudents = async () => {
         }
         if (!validateFullName(student.fullName)) continue;
 
-        if (!students.filter(std => std.fullName === student.fullName).length === 0) {
+        if (students.filter(std => std.fullName === student.fullName).length === 0) {
             students.push(student)
         }
     }
@@ -67,7 +67,9 @@ const AddStudents = async () => {
     
 } 
 
-module.exports.Student = Student;
-module.exports.FindStudent = FindStudent;
-module.exports.AllStudents = AllStudents;
-module.exports.AddStudents = AddStudents; 
+module.exports = {
+    Student,
+    FindStudent,
+    AllStudents,
+    AddStudents
+}
