@@ -39,5 +39,5 @@ app.get("/database/update", async (req,res) => {
 
 app.listen("4200", async () => {
     console.log("App is started!")
-    //await UpdateDatabase()
+    await UpdateDatabase()
 })   
