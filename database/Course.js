@@ -2,14 +2,9 @@ const mongoose = require("mongoose")
 const Schema = mongoose.Schema
 const validateFullName = require("../utils/ValidateFullName.js")
 const parser = require("../utils/CsvParser.js")
-const { Student } = require("./Student")
-const {Specialization} = require("./Specialization.js")
 
 const CourseSchema = new Schema({
-    student: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Student'
-    },
+    student: String,
     courseName: String,
     progress: Number,
     isCompleted: Boolean,
@@ -22,17 +17,13 @@ const CourseSchema = new Schema({
     classEndTime: Date,
     lastCourseActivityTime: Date,
     completionTime: Date,
-    modules:[{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Module'
-    }]
 })
 
 const Course = mongoose.model("Course", CourseSchema);
 
-const CreateCourse = (csvRow, student) => {
-    return Course.create({
-        student: student._id,
+const CreateCourse = (csvRow) => {
+    return {
+        student: csvRow[0],
         courseName: csvRow[3],
         progress: Math.floor(csvRow[11]),
         isCompleted: csvRow[13] === "Yes",
@@ -45,63 +36,24 @@ const CreateCourse = (csvRow, student) => {
         classEndTime: Date.parse(csvRow[9]) || null,
         lastCourseActivityTime: Date.parse(csvRow[10]) || null,
         completionTime: Date.parse(csvRow[18]) || null,
-        modules: []
-    })
+    }
 }
 
 const AddCourses = async () => {
     let arrays = await parser("usage.csv")
     console.log("adding courses")
+    let courses = await Course.find({})
     for (let i = 1; i < arrays.length; i++) {
         let csvRow = arrays[i];
 
-        if (!validateFullName(csvRow[0])) continue;
-
-        await Student.findOne({ fullName: csvRow[0] })
-            .populate("specializations")
-            .then(async student => {
-                await CreateCourse(csvRow, student)
-                    .then(async course => {
-                        let specialization = student.specializations.find(spec => spec.university === course.university);
-                        if (!specialization) {
-                            let noSpec = student.specializations.find(spec => spec.specializationName === "Курсы без специализации");
-                            if (!noSpec) {
-                                let completed = course.isCompleted ? 1 : 0
-                                let courseCount = 1
-                                await Specialization.create({
-                                    student: student._id,
-                                    specializationName: "Курсы без специализации",
-                                    courseCount: 1,
-                                    completedCoursesCount: completed,
-                                    isCompleted: completed === courseCount,
-                                    university: '',
-                                    courses: [course._id]
-                                })
-                                    .then(async spec => {
-                                        student.specializations.push(spec)
-                                        await student.save()
-                                    })
-                                    .catch(err => console.log("error while creating empty spec " + err))
-                            }
-                            else {
-                                let spec = student.specializations.find(spec => spec.specializationName === "Курсы без специализации");
-                                let id = spec._id;
-                                let courses = spec.courses
-                                await Specialization.findByIdAndUpdate(id, { courses: [...courses, course._id] })
-                            }
-                        }
-                        else {
-                            let spec = student.specializations.find(spec => spec.university === course.university)
-                            let id = spec._id;
-                            let courses = spec.courses
-                            await Specialization.findByIdAndUpdate(id, { courses: [...courses, course._id] })
-                        }
-                    })
-                    .catch(err => console.log("error while saving student at adding courses " + err))
-            })
-            .catch(err => console.log(err))
+        if (!validateFullName(csvRow[0]) && courses.find(course => course.student === csvRow[0] && course.courseName === csvRow[3])) continue;
+        let course = CreateCourse(csvRow)
+        courses.push(course);
     }
-    console.log("courses added successfully")
+    await Course.insertMany(courses)
+    .then(crs => console.log("courses added successfully"))
+    .catch(err => console.log("error in adding courses: " + err))
+    
 }
 
 module.exports.Course = Course;
