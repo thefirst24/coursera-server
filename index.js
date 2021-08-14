@@ -1,6 +1,6 @@
 const express = require("express")
 const parser = require("./utils/CsvParser")
-const {UpdateDatabase} =  require("./database/database")
+const {UpdateDatabase, DropDatabase} =  require("./database/database")
 const {FindStudent, AllStudents} = require("./database/Student")
 const cors = require('cors');
 
@@ -17,8 +17,14 @@ app.get("/",(req,res) => {
 
 app.post("/student",async (req,res) => {
     let student = await FindStudent(req.body.name)
-    console.log(student)
+    //console.log(student)
     res.send(student)  
+})
+
+app.get("/database/drop", async (req,res) => {
+    await DropDatabase();
+    console.log("dropped")
+    res.end("dropped")
 })
 
 app.get("/students", async (req,res) => {
