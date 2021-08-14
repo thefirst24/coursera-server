@@ -31,15 +31,15 @@ const AddSpecializations = async () => {
             isCompleted: row[10] === "Yes",
             university: row[5],
         })
-        if (!specializations.find(spec => spec.student === row[0] && spec.specializationName === "Курсы без специализации"))
-            specializations.push({
-                student: row[0],
-                specializationName: "Курсы без специализации",
-                courseCount: 0,
-                completedCoursesCount: 0,
-                isCompleted: true,
-                university: '',
-            })
+        //if (!specializations.find(spec => spec.student === row[0] && spec.specializationName === "Курсы без специализации"))
+        //    specializations.push({
+        //        student: row[0],
+        //        specializationName: "Курсы без специализации",
+        //        courseCount: 0,
+        //        completedCoursesCount: 0,
+        //        isCompleted: true,
+        //        university: '',
+        //    })
     }
     await Specialization.insertMany(specializations).
     then(() => console.log("Specializations added successfully"))

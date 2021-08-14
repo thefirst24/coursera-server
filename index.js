@@ -1,7 +1,7 @@
 const express = require("express")
 const parser = require("./utils/CsvParser")
 const {UpdateDatabase, DropDatabase} =  require("./database/database")
-const {FindStudent, AllStudents} = require("./database/Student")
+const {FindStudent, GetStudentsWithName} = require("./database/Student")
 const cors = require('cors');
 
 const app = express()
@@ -27,8 +27,8 @@ app.get("/database/drop", async (req,res) => {
     res.end("dropped")
 })
 
-app.get("/students", async (req,res) => {
-    await AllStudents()
+app.post("/students", async (req,res) => {
+    await GetStudentsWithName(req.body.name)
     .then(students => res.json(students))
     .catch((err) => {
         console.log(err)
