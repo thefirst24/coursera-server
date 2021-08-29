@@ -3,6 +3,8 @@ const Schema = mongoose.Schema
 const validateFullName = require("../utils/ValidateFullName.js")
 const parser = require("../utils/CsvParser.js")
 
+const dbUrl = "mongodb://127.0.0.1:27017/"
+
 const SpecializationSchema = new Schema({
     student: String,
     specializationName: String,
@@ -31,22 +33,26 @@ const AddSpecializations = async () => {
             isCompleted: row[10] === "Yes",
             university: row[5],
         })
-        //if (!specializations.find(spec => spec.student === row[0] && spec.specializationName === "Курсы без специализации"))
-        //    specializations.push({
-        //        student: row[0],
-        //        specializationName: "Курсы без специализации",
-        //        courseCount: 0,
-        //        completedCoursesCount: 0,
-        //        isCompleted: true,
-        //        university: '',
-        //    })
     }
     await Specialization.insertMany(specializations).
     then(() => console.log("Specializations added successfully"))
     .catch(err => console.log("error while adding specializations: " + err))
 }
 
+const allSpecializations = async () => {
+    await mongoose.connect(dbUrl, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        useFindAndModify: false,
+        useCreateIndex: true
+    });
+    let specs = await Specialization.find({}).distinct("specializationName")
+    await mongoose.connection.close()
+    return specs
+}
+
 
 
 module.exports.Specialization = Specialization;
 module.exports.AddSpecializations = AddSpecializations;
+module.exports.allSpecializations = allSpecializations

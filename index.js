@@ -1,7 +1,9 @@
 const express = require("express")
 const parser = require("./utils/CsvParser")
 const {UpdateDatabase, DropDatabase} =  require("./database/database")
-const {FindStudent, GetStudentsWithName} = require("./database/Student")
+const {FindStudent, GetStudentsWithFilters} = require("./database/Student")
+const {allSpecializations} = require("./database/Specialization")
+const {AllCourses} = require("./database/Course")
 const cors = require('cors');
 
 const app = express()
@@ -28,7 +30,7 @@ app.get("/database/drop", async (req,res) => {
 })
 
 app.post("/students", async (req,res) => {
-    await GetStudentsWithName(req.body.name)
+    await GetStudentsWithFilters(req.body)
     .then(students => res.json(students))
     .catch((err) => {
         console.log(err)
@@ -39,8 +41,31 @@ app.post("/students", async (req,res) => {
 app.get("/database/update", async (req,res) => {
     await UpdateDatabase()
     .then(() => res.end("successfully updated"))
-    .catch(err => res.end("updating went wrong " + err))
-    
+    .catch(err => res.end("updating went wrong " + err))  
+})
+
+app.get("/specializations", async (req,res) => {
+    await allSpecializations()
+    .then(specs => {
+        const js = res.json(specs)
+        return js
+    })
+    .catch((err) => {
+        console.log(err)
+        res.end(err)
+    })
+})
+
+app.get("/courses", async (req,res) => {
+    await AllCourses()
+    .then(courses => {
+        const js = res.json(courses)
+        return js
+    })
+    .catch((err) => {
+        console.log(err)
+        res.end(err)
+    })
 })
 
 app.listen("4200", async () => {

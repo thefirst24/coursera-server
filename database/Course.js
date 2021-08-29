@@ -3,6 +3,8 @@ const Schema = mongoose.Schema
 const validateFullName = require("../utils/ValidateFullName.js")
 const parser = require("../utils/CsvParser.js")
 
+const dbUrl = "mongodb://127.0.0.1:27017/"
+
 const CourseSchema = new Schema({
     student: String,
     courseName: String,
@@ -56,6 +58,19 @@ const AddCourses = async () => {
     
 }
 
+const AllCourses = async () => {
+    await mongoose.connect(dbUrl, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        useFindAndModify: false,
+        useCreateIndex: true
+    });
+    let courses = await Course.find({}).distinct("courseName")
+    await mongoose.connection.close()
+    return courses
+}
+
 module.exports.Course = Course;
 module.exports.CreateCourse = CreateCourse
 module.exports.AddCourses = AddCourses;
+module.exports.AllCourses = AllCourses;

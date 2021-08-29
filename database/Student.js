@@ -28,12 +28,7 @@ const FindStudent = async (name) => {
         useCreateIndex: true
     });
     console.log("getting student with name " + name + "...")
-    const studentFromDb = await Student.findOne({ fullName: name }).lean()
-    let student = {
-        fullName: studentFromDb.fullName,
-        group: studentFromDb.group,
-        specializations: []
-    }
+    const student = await Student.findOne({ fullName: name }).lean()
     student.specializations = await Specialization.find({ student: student.fullName }).lean()
 
     student.specializations.map(spec => {
@@ -48,7 +43,7 @@ const FindStudent = async (name) => {
 
     const modules = await Module.find({ student: student.fullName }).lean()
 
-    await mongoose.disconnect()
+    
 
     for (let i = 0; i < modules.length; i++) {
         let course = courses.find(course => course.courseName === modules[i].courseName)
@@ -64,6 +59,17 @@ const FindStudent = async (name) => {
 
     for (let i = 0; i < courses.length; i++) {
         let spec = student.specializations.find(spec => spec.university === courses[i].university)
+        const allModulesOfCourse = await Module.find({courseName: courses[i].courseName}).distinct("moduleName")
+        for (let k = 0; k < allModulesOfCourse.length; k++) {
+            if (!courses[i].modules.find(module => module.moduleName === allModulesOfCourse[k])) {
+                courses[i].modules.push({
+                    moduleName: allModulesOfCourse[k] + " (студент не приступал к прохождению модуля)",
+                    description: "Не приступал к прохождению модуля",
+                    assignments: []
+                })
+            } 
+        }
+
         if (!spec) {
             let specNoCourses = student.specializations.find(spec => spec.university === '')
             if (!specNoCourses) {
@@ -86,23 +92,28 @@ const FindStudent = async (name) => {
             spec.courses.push(courses[i])
         }
     }
+    await mongoose.disconnect()
     return student;
 }
 
-const GetStudentsWithName = async (name) => {
+const GetStudentsWithFilters = async (filters) => {
     mongoose.connect(dbUrl, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
         useFindAndModify: false,
         useCreateIndex: true
     });
-    const res = await Student.find({}).lean()
+    const students = await Student.find({}).lean()
         .catch(err => console.log(err))
-    await mongoose.disconnect()
-    let students = res.map(student => {
-        return { fullName: student.fullName, group: student.group }
-    })
-    return findUser(name, students);
+        
+    const courses = await Course.find({}).lean()
+        .catch(err => console.log(err))
+
+    const Specs = await Specialization.find({}).lean()
+    .catch(err => console.log(err))
+
+    await mongoose.connection.close()
+    return findUser(filters, students, courses,Specs);
 }
 
 const AddStudents = async () => {
@@ -128,5 +139,5 @@ const AddStudents = async () => {
 
 module.exports.Student = Student;
 module.exports.FindStudent = FindStudent;
-module.exports.GetStudentsWithName = GetStudentsWithName;
+module.exports.GetStudentsWithFilters = GetStudentsWithFilters;
 module.exports.AddStudents = AddStudents;
