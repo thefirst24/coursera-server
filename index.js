@@ -5,6 +5,7 @@ const {FindStudent, GetStudentsWithFilters} = require("./database/Student")
 const {allSpecializations} = require("./database/Specialization")
 const {AllCourses} = require("./database/Course")
 const cors = require('cors');
+const Unload = require('./database/Unload')
 
 const app = express()
 
@@ -66,6 +67,12 @@ app.get("/courses", async (req,res) => {
         console.log(err)
         res.end(err)
     })
+})
+
+app.get("/unload", async (req, res) => {
+    await Unload()
+    .then(() => res.end("good"))
+    .catch((err) => console.log(err))
 })
 
 app.listen("4200", async () => {

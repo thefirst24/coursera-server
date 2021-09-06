@@ -14,7 +14,9 @@ const findUser = (filters , users, courses,specializations) => {
     console.log(filters)
     let res = []
     users.map(x => {
-        if (x === undefined) return false
+        if (x === undefined) return false;
+        if (x.fullName.includes("?")) return false;
+
         const filtCourses = courses.filter(course => IncludesIgnoreCase(course.student,x.fullName))
         const specsFilt = specializations.filter(course => IncludesIgnoreCase(course.student,x.fullName))
 
@@ -24,12 +26,14 @@ const findUser = (filters , users, courses,specializations) => {
         const specs = (
             filters.specializations.some(elem => specsFilt.find(spec => spec.specializationName === elem)))
 
-        if (name &&  (crs || specs) || (name && filters.specializations.length == 0 && filters.courses.length == 0 )) {
+        if (name && (crs || specs) || (name && filters.specializations.length == 0 && filters.courses.length == 0 )) {
             res.push({
                 fullName: x.fullName,
                 group: x.group,
                 averageHours: filtCourses.length === 0 ? 0 : filtCourses.map(course => course.learningHours).reduce((a,b) => a +b , 0) / filtCourses.length,
                 averageGrade: filtCourses.length === 0 ? 0 : filtCourses.map(course => course.grade).reduce((a,b) => a +b , 0) / filtCourses.length,
+                courses: filtCourses,
+                specializations: specsFilt
             })
         }
         return name &&  crs ||  specs
