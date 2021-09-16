@@ -51,8 +51,21 @@ const allSpecializations = async () => {
     return specs
 }
 
+const findByName = async (specializationName) => {
+    await mongoose.connect(dbUrl, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        useFindAndModify: false,
+        useCreateIndex: true
+    });
+    const specializations = await Specialization.find({specializationName: specializationName});
+    await mongoose.connection.close()
+    return specializations;
+}
+
 
 
 module.exports.Specialization = Specialization;
 module.exports.AddSpecializations = AddSpecializations;
-module.exports.allSpecializations = allSpecializations
+module.exports.allSpecializations = allSpecializations;
+module.exports.findByName = findByName;

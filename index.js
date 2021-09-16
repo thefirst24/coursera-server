@@ -6,6 +6,7 @@ const {allSpecializations} = require("./database/Specialization")
 const {AllCourses} = require("./database/Course")
 const cors = require('cors');
 const Unload = require('./database/Unload')
+const unloadBySpecialization = require('./database/UnloadBySpecialization')
 
 const app = express()
 
@@ -75,7 +76,14 @@ app.get("/unload", async (req, res) => {
     .catch((err) => console.log(err))
 })
 
+app.post("/unloadBySpecialization/", async (req, res) => {
+    console.log("requesting to unload by specialization  " + req.body.specializationName);
+    await unloadBySpecialization(req.body.specializationName)
+    .then(() => res.download(__dirname + "/files/Specialization.xlsx"))
+    .catch((err) => console.log(err));
+})
+
 app.listen("4200", async () => {
     console.log("App is started!")
     //await UpdateDatabase()
-})   
+}) 

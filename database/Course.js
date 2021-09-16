@@ -70,7 +70,20 @@ const AllCourses = async () => {
     return courses
 }
 
+const findByStudentAndUniversity = async (studentFio, university) => {
+    await mongoose.connect(dbUrl, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        useFindAndModify: false,
+        useCreateIndex: true
+    });
+    let courses = await Course.find({student: studentFio, university}).lean();
+    await mongoose.connection.close()
+    return courses
+}
+
 module.exports.Course = Course;
 module.exports.CreateCourse = CreateCourse
 module.exports.AddCourses = AddCourses;
 module.exports.AllCourses = AllCourses;
+module.exports.findByStudentAndUniversity = findByStudentAndUniversity;

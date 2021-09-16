@@ -1,5 +1,5 @@
 const validateFullName = (name) => {
-    let res = name !== "ANONYMIZED_NAME" && name !== "" && name !== undefined && name !== null
+    let res = name !== "ANONYMIZED_NAME" && name !== "" && name
     return res;
 }
 
